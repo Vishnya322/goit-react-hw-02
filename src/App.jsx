@@ -1,35 +1,72 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, useEffect } from 'react';
+import Options from './components/options/options';
+import Feedback from './components/feedback/feedback';
+import Notification from './components/notification/notification';
+import Description from './components/description/Description';
+import css from './App.module.css';
 
-function App() {
-  const [count, setCount] = useState(0)
+//object стану відгуків за замовченням
+const featuresState = {
+  good: 0,
+  neutral: 0,
+  bad: 0,
+};
+
+//ф-ція що зчитує значення localStorage за ключем
+const getInitialFeedback = () => {
+  const storedFeedback = window.localStorage.getItem('feedback');
+  return storedFeedback !== null ? JSON.parse(storedFeedback) : featuresState;
+};
+
+const App = () => {
+  // зміна початкового значення стану
+  const [feedback, setFeedback] = useState(getInitialFeedback);
+
+  // async ф-ція збереження даних у локальному сховищі
+  useEffect(() => {
+    localStorage.setItem('feedback', JSON.stringify(feedback));
+  }, [feedback]);
+
+  //ф-ція зміни стану відгуків
+  const updateFeedback = feedbackType => {
+    setFeedback(prevFeedback => ({
+      ...prevFeedback,
+      [feedbackType]: prevFeedback[feedbackType] + 1,
+    }));
+  };
+
+  // Загальна кількість відгуків
+  const totalFeedback = feedback.good + feedback.neutral + feedback.bad;
+
+  // Підрахунок відсотка позитивних відгуків
+  const positiveFeedback =
+    Math.round(((feedback.good + feedback.neutral) / totalFeedback) * 100) +
+    '%';
+
+  // Функція скидання відгуків
+  const resetFeedback = () => {
+    setFeedback(featuresState);
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React is good</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <div className={css.appContainer}>
+      <Description />
+      <Options
+        updateFeedback={updateFeedback}
+        resetFeedback={resetFeedback}
+        totalFeedback={totalFeedback}
+      />
+      {totalFeedback ? (
+        <Feedback
+          feedback={feedback}
+          totalFeedback={totalFeedback}
+          positiveFeedback={positiveFeedback}
+        />
+      ) : (
+        <Notification />
+      )}
+    </div>
+  );
+};
 
-export default App
+export default App;
