@@ -11,5 +11,4 @@ const Feedback = ({ feedback, totalFeedback, positiveFeedback }) => {
     </ul>
   );
 };
-
 export default Feedback;
